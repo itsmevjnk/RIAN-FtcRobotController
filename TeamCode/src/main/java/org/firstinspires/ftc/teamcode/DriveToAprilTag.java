@@ -2,12 +2,16 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.robot.Robot;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
+import org.firstinspires.ftc.teamcode.ControlAlgorithms.PIDController;
+import org.firstinspires.ftc.teamcode.Drivetrain.DrivetrainConstants;
 import org.firstinspires.ftc.teamcode.Drivetrain.MecanumDrivetrain;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -28,22 +32,28 @@ public class DriveToAprilTag extends LinearOpMode {
     private static final int DESIRED_TAG_ID = 1;
     private static final double DESIRED_DISTANCE = 10; // inch
 
-    private static final double DRIVE_GAIN = 0.02;
-    private static final double STRAFE_GAIN = 0.005;
-    private static final double TURN_GAIN = 0.01;
     private static final boolean INVERT_AUTO_CONTROLS = true; // set to true if camera is mounted at the back
 
     private static final double MAX_AUTO_DRIVE = 0.75;
     private static final double MAX_AUTO_STRAFE = 0.75;
     private static final double MAX_AUTO_TURN = 0.25;
 
+    private PIDController driveController = new PIDController(DrivetrainConstants.DRIVE_Y_PID, -MAX_AUTO_DRIVE, MAX_AUTO_DRIVE);
+    private PIDController strafeController = new PIDController(DrivetrainConstants.DRIVE_X_PID, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE);
+    private PIDController turnController = new PIDController(DrivetrainConstants.DRIVE_ROT_PID, -MAX_AUTO_TURN, MAX_AUTO_TURN);
+
     private static final double DISTANCE_ERR_TOLERANCE = 0.15;
     private static final double HEADING_ERR_TOLERANCE = 1.0;
     private static final double YAW_ERR_TOLERANCE = 1.0;
 
+    private static final double PID_RESET_TIMEOUT = 0.5;
+
+    private ElapsedTime time;
+
     @Override
     public void runOpMode() {
         drivetrain = new MecanumDrivetrain(hardwareMap, telemetry);
+        time = new ElapsedTime();
 
         /* initialize AprilTag */
         aprilTag = new AprilTagProcessor.Builder().build();
@@ -61,13 +71,20 @@ public class DriveToAprilTag extends LinearOpMode {
 
         boolean unattendedDrive = false;
         boolean rbPressed = false;
+        double lastDetectTimestamp = time.seconds();
         while(opModeIsActive()) {
+            if(time.seconds() - lastDetectTimestamp > PID_RESET_TIMEOUT) {
+                /* PID reset timeout exceeded - assume we've moved on to a new target and reset PID controllers */
+                resetPID();
+            }
+
             /* detect AprilTags */
             AprilTagDetection detectedTag = null;
             List<AprilTagDetection> currentDetections = aprilTag.getDetections();
             for(AprilTagDetection detection : currentDetections) {
                 if (detection.metadata != null && detection.id == DESIRED_TAG_ID) { // found our tag
                     detectedTag = detection;
+                    lastDetectTimestamp = time.seconds();
                     break;
                 }
             }
@@ -84,12 +101,13 @@ public class DriveToAprilTag extends LinearOpMode {
                 if(!rbPressed) {
                     rbPressed = true;
                     unattendedDrive = !unattendedDrive;
+                    if(unattendedDrive) resetPID(); // reset PID if we're turning unattended drive on
                 }
             } else rbPressed = false;
             telemetry.addData("Unattended drive", unattendedDrive);
 
             if(detectedTag != null && (gamepad1.left_bumper || unattendedDrive)) {
-                /* drive towards detected tag - TODO: figure out how to strafe */
+                /* drive towards detected tag */
                 double rangeError = detectedTag.ftcPose.range - DESIRED_DISTANCE;
                 double headingError = -detectedTag.ftcPose.bearing; // positive bearing = turn counter-clockwise = negative turn value
                 double yawError = detectedTag.ftcPose.yaw;
@@ -103,9 +121,9 @@ public class DriveToAprilTag extends LinearOpMode {
                     unattendedDrive = false; // no more driving if we've reached our target within tolerances
 
                 if(gamepad1.left_bumper || unattendedDrive) {
-                    double x = Range.clip(yawError * STRAFE_GAIN, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE);
-                    double y = Range.clip(rangeError * DRIVE_GAIN, -MAX_AUTO_DRIVE, MAX_AUTO_DRIVE);
-                    double rot = Range.clip(headingError * TURN_GAIN, -MAX_AUTO_TURN, MAX_AUTO_TURN);
+                    double x = strafeController.control(yawError);
+                    double y = driveController.control(rangeError);
+                    double rot = turnController.control(headingError);
 
                     drivetrain.drive(x, y, rot);
                 }
@@ -139,5 +157,11 @@ public class DriveToAprilTag extends LinearOpMode {
             gainControl.setGain(gain);
             sleep(20);
         }
+    }
+
+    private void resetPID() {
+        driveController.reset();
+        strafeController.reset();
+        turnController.reset();
     }
 }
