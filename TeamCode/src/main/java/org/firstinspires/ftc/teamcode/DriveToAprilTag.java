@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.robot.Robot;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -48,7 +49,7 @@ public class DriveToAprilTag extends LinearOpMode {
         aprilTag = new AprilTagProcessor.Builder().build();
         aprilTag.setDecimation(1); // TODO: change this to adapt to gameplay conditions
         visionPortal = new VisionPortal.Builder()
-                .setCamera(hardwareMap.get(WebcamName.class, "Webcam"))
+                .setCamera(hardwareMap.get(WebcamName.class, RobotConfig.WEBCAM_BACK))
                 .addProcessor(aprilTag)
                 .build();
 

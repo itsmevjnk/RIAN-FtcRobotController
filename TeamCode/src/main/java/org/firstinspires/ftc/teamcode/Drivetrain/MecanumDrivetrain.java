@@ -1,35 +1,27 @@
 package org.firstinspires.ftc.teamcode.Drivetrain;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.RobotConfig;
 import org.firstinspires.ftc.teamcode.Drivetrain.DrivetrainConstants;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class MecanumDrivetrain {
     private DcMotorEx driveLeftBack, driveRightBack, driveLeftFront, driveRightFront;
-    private IMU imu;
     private Telemetry telemetry;
 
     public MecanumDrivetrain(HardwareMap hardwareMap, Telemetry tele) {
         telemetry = tele; // save telemetry instance for later
 
-        /* get IMU instance and initialise it */
-        imu = hardwareMap.get(IMU.class, DrivetrainConstants.IMU_NAME);
-        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(DrivetrainConstants.CH_LOGO_DIRECTION, DrivetrainConstants.CH_USB_DIRECTION)));
-        imu.resetYaw(); // reset heading to 0
-
         /* get drivetrain motor instances */
-        driveLeftBack = hardwareMap.get(DcMotorEx.class, DrivetrainConstants.LEFT_BACK_NAME);
-        driveRightBack = hardwareMap.get(DcMotorEx.class, DrivetrainConstants.RIGHT_BACK_NAME);
-        driveLeftFront = hardwareMap.get(DcMotorEx.class, DrivetrainConstants.LEFT_FRONT_NAME);
-        driveRightFront = hardwareMap.get(DcMotorEx.class, DrivetrainConstants.RIGHT_FRONT_NAME);
+        driveLeftBack = hardwareMap.get(DcMotorEx.class, RobotConfig.DRIVE_LEFT_BACK);
+        driveRightBack = hardwareMap.get(DcMotorEx.class, RobotConfig.DRIVE_RIGHT_BACK);
+        driveLeftFront = hardwareMap.get(DcMotorEx.class, RobotConfig.DRIVE_LEFT_FRONT);
+        driveRightFront = hardwareMap.get(DcMotorEx.class, RobotConfig.DRIVE_RIGHT_FRONT);
 
         /* reverse direction on the left motors */
         driveLeftBack.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -65,9 +57,5 @@ public class MecanumDrivetrain {
 
     public void brake() {
         drive(0, 0, 0);
-    }
-
-    public double getHeading() {
-        return imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
     }
 }
