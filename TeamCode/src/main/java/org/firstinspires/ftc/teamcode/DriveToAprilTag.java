@@ -30,9 +30,9 @@ public class DriveToAprilTag extends LinearOpMode {
     private AprilTagProcessor aprilTag; // AprilTag detector
 
     private static final int DESIRED_TAG_ID = 1;
-    private static final double DESIRED_DISTANCE = 10; // inch
+    private static final double DESIRED_DISTANCE = 15; // inch
 
-    private static final boolean INVERT_AUTO_CONTROLS = true; // set to true if camera is mounted at the back
+    private static final boolean INVERT_AUTO_CONTROLS = false; // set to true if camera is mounted at the back
 
     private static final double MAX_AUTO_DRIVE = 0.75;
     private static final double MAX_AUTO_STRAFE = 0.75;
@@ -57,9 +57,9 @@ public class DriveToAprilTag extends LinearOpMode {
 
         /* initialize AprilTag */
         aprilTag = new AprilTagProcessor.Builder().build();
-        aprilTag.setDecimation(1); // TODO: change this to adapt to gameplay conditions
+        aprilTag.setDecimation(3); // TODO: change this to adapt to gameplay conditions
         visionPortal = new VisionPortal.Builder()
-                .setCamera(hardwareMap.get(WebcamName.class, RobotConfig.WEBCAM_BACK))
+                .setCamera(hardwareMap.get(WebcamName.class, RobotConfig.WEBCAM_FRONT))
                 .addProcessor(aprilTag)
                 .build();
 
