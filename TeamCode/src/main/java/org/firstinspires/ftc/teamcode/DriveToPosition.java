@@ -10,16 +10,17 @@ import org.firstinspires.ftc.teamcode.ControlAlgorithms.PIDController;
 import org.firstinspires.ftc.teamcode.Drivetrain.DrivetrainConstants;
 import org.firstinspires.ftc.teamcode.Drivetrain.MecanumDrivetrain;
 
-@Autonomous(name = "Drive to heading")
-public class DriveToHeading extends LinearOpMode {
+@Autonomous(name = "Drive to position")
+public class DriveToPosition extends LinearOpMode {
     private MecanumDrivetrain drivetrain;
 
     private static final double MAX_AUTO_TURN = 1.00;
     private PIDController turnController = new PIDController(DrivetrainConstants.DRIVE_ROT_PID, -MAX_AUTO_TURN, MAX_AUTO_TURN);
 
-    /* heading info in degrees */
-    private static final double DESIRED_HEADING = 180.0;
-    private static final double HEADING_ERR_TOLERANCE = 0.25;
+    /* position info */
+    private static final double DESIRED_X = 10.0;
+    private static final double DESIRED_Y = 10.0;
+    private static final double DESIRED_HEADING = 90.0; // TODO: driveTrain.driveTo() can't handle 180-degree headings
 
     private IMU imu;
 
@@ -33,20 +34,15 @@ public class DriveToHeading extends LinearOpMode {
 
         waitForStart();
 
-        imu.resetYaw();
-
-        while(!isStopRequested()) {
-            double currentHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            double error = currentHeading - DESIRED_HEADING;
-            double rot = turnController.control(error); // NOTE: robot heading's (+) direction is counterclockwise, while the (+) direction for drivetrain rotation is clockwise!
-
-            telemetry.addData("currentHeading", currentHeading);
-            telemetry.addData("error", error);
-            telemetry.addData("rot", rot);
+        drivetrain.resetPosition();
+        boolean doneHeading = false; // set when heading is OK
+        while(opModeIsActive()) {
+            if(doneHeading) {
+                /* turn first, then drive */
+                if(drivetrain.driveTo(DESIRED_X, DESIRED_Y)) return;
+            } else doneHeading = drivetrain.turnTo(DESIRED_HEADING);
             telemetry.update();
-
-            if(Math.abs(error) <= HEADING_ERR_TOLERANCE) break; // stop if we are within tolerance
-            drivetrain.drive(0, 0, rot);
         }
+
     }
 }

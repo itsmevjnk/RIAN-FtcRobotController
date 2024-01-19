@@ -38,8 +38,10 @@ public class DriveToAprilTag extends LinearOpMode {
     private static final double MAX_AUTO_STRAFE = 1.00;
     private static final double MAX_AUTO_TURN = 1.00;
 
+    public static PIDCoefficients DRIVE_X_YAW_PID = new PIDCoefficients(0.005, 0.0, 0.000005);
+
     private PIDController driveController = new PIDController(DrivetrainConstants.DRIVE_Y_PID, -MAX_AUTO_DRIVE, MAX_AUTO_DRIVE);
-    private PIDController strafeController = new PIDController(DrivetrainConstants.DRIVE_X_PID, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE);
+    private PIDController strafeController = new PIDController(DRIVE_X_YAW_PID, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE); // we're strafing by the yaw here, which uses a different unit, so we need to use different PID coefficients
     private PIDController turnController = new PIDController(DrivetrainConstants.DRIVE_ROT_PID, -MAX_AUTO_TURN, MAX_AUTO_TURN);
 
     private static final double DISTANCE_ERR_TOLERANCE = 0.15;

@@ -22,6 +22,7 @@ public class DriveTeleOp extends LinearOpMode {
         waitForStart();
 
         while(opModeIsActive()) {
+            drivetrain.updatePosition();
             drivetrain.drive(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x); // NOTE: top joystick positions result in negative Y reading so we need to negate it
             launcher.setState(gamepad1.options);
             telemetry.update();
