@@ -30,13 +30,13 @@ public class DriveToAprilTag extends LinearOpMode {
     private AprilTagProcessor aprilTag; // AprilTag detector
 
     private static final int DESIRED_TAG_ID = 1;
-    private static final double DESIRED_DISTANCE = 15; // inch
+    private static final double DESIRED_DISTANCE = 15; // mm
 
     private static final boolean INVERT_AUTO_CONTROLS = false; // set to true if camera is mounted at the back
 
-    private static final double MAX_AUTO_DRIVE = 0.75;
-    private static final double MAX_AUTO_STRAFE = 0.75;
-    private static final double MAX_AUTO_TURN = 0.25;
+    private static final double MAX_AUTO_DRIVE = 1.00;
+    private static final double MAX_AUTO_STRAFE = 1.00;
+    private static final double MAX_AUTO_TURN = 1.00;
 
     private PIDController driveController = new PIDController(DrivetrainConstants.DRIVE_Y_PID, -MAX_AUTO_DRIVE, MAX_AUTO_DRIVE);
     private PIDController strafeController = new PIDController(DrivetrainConstants.DRIVE_X_PID, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE);

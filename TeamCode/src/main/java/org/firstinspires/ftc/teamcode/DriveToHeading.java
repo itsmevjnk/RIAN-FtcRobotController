@@ -14,12 +14,12 @@ import org.firstinspires.ftc.teamcode.Drivetrain.MecanumDrivetrain;
 public class DriveToHeading extends LinearOpMode {
     private MecanumDrivetrain drivetrain;
 
-    private static final double MAX_AUTO_TURN = 0.50;
+    private static final double MAX_AUTO_TURN = 1.00;
     private PIDController turnController = new PIDController(DrivetrainConstants.DRIVE_ROT_PID, -MAX_AUTO_TURN, MAX_AUTO_TURN);
 
     /* heading info in degrees */
-    private static final double DESIRED_HEADING = 30.0;
-    private static final double HEADING_ERR_TOLERANCE = 1.0;
+    private static final double DESIRED_HEADING = 180.0;
+    private static final double HEADING_ERR_TOLERANCE = 0.25;
 
     private IMU imu;
 
@@ -38,7 +38,7 @@ public class DriveToHeading extends LinearOpMode {
         while(!isStopRequested()) {
             double currentHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
             double error = currentHeading - DESIRED_HEADING;
-            double rot = -turnController.control(error); // NOTE: robot heading's (+) direction is counterclockwise, while the (+) direction for drivetrain rotation is clockwise!
+            double rot = turnController.control(error); // NOTE: robot heading's (+) direction is counterclockwise, while the (+) direction for drivetrain rotation is clockwise!
 
             telemetry.addData("currentHeading", currentHeading);
             telemetry.addData("error", error);

@@ -15,5 +15,5 @@ public class DrivetrainConstants {
 
     public static PIDCoefficients DRIVE_X_PID = new PIDCoefficients(0.005, 0.0, 0.000005);
     public static PIDCoefficients DRIVE_Y_PID = new PIDCoefficients(0.02, 0.0, 0.0);
-    public static PIDCoefficients DRIVE_ROT_PID = new PIDCoefficients(0.005, 0.0, 0.000001);
+    public static PIDCoefficients DRIVE_ROT_PID = new PIDCoefficients(0.01, 0.0, 0.000001);
 }
