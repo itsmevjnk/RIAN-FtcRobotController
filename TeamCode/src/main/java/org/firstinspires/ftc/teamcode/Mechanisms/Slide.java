@@ -15,11 +15,13 @@ public class Slide {
         motorLeft = hardwareMap.get(DcMotor.class, RobotConfig.DC_SLIDE_LEFT);
         motorRight = hardwareMap.get(DcMotor.class, RobotConfig.DC_SLIDE_RIGHT);
         motorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLeft.setPower(SPEED);
         motorRight.setPower(SPEED);
+        motorLeft.setTargetPosition(0);
+        motorRight.setTargetPosition(0);
+        motorLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
     public void setState(boolean state) {
         if (state) {
