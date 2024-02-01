@@ -6,12 +6,15 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
+import org.firstinspires.ftc.teamcode.ControlAlgorithms.PIDController;
+import org.firstinspires.ftc.teamcode.Drivetrain.DrivetrainConstants;
+import org.firstinspires.ftc.teamcode.Drivetrain.MecanumDrivetrain;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -30,7 +33,12 @@ public class DriveToAprilTag extends LinearOpMode {
 
     private static final int DESIRED_TAG_ID = 1;
     private static final double DESIRED_DISTANCE = 15; // inch
+    private static final double RR_STOPPING_DISTANCE = 30;
 
+    private static final double DISTANCE_ERR_TOLERANCE = 0.15;
+    private static final double HEADING_ERR_TOLERANCE = 0.5;
+    private static final double YAW_ERR_TOLERANCE = 0.5;
+    private static final double MAX_SPEED = 0.5;
     private ElapsedTime time;
 
     @Override
@@ -81,8 +89,8 @@ public class DriveToAprilTag extends LinearOpMode {
                 double gamma = heading + bearingRad + Math.PI / 2;
                 destHeading = yawRad + heading;
                 destCoord = new Vector2d(
-                        drivetrain.pose.position.x + detectedTag.ftcPose.range * Math.sin(gamma) - DESIRED_DISTANCE * Math.cos(destHeading),
-                        drivetrain.pose.position.y - detectedTag.ftcPose.range * Math.cos(gamma) - DESIRED_DISTANCE * Math.sin(destHeading)
+                        drivetrain.pose.position.x + detectedTag.ftcPose.range * Math.sin(gamma) - Math.max(DESIRED_DISTANCE, RR_STOPPING_DISTANCE) * Math.cos(destHeading),
+                        drivetrain.pose.position.y - detectedTag.ftcPose.range * Math.cos(gamma) - Math.max(DESIRED_DISTANCE, RR_STOPPING_DISTANCE) * Math.sin(destHeading)
                 );
 
                 telemetry.addData("Dest. X", destCoord.x);
@@ -110,7 +118,40 @@ public class DriveToAprilTag extends LinearOpMode {
             telemetry.addData("Heading", Math.toDegrees(drivetrain.pose.heading.toDouble()));
 
             telemetry.update();
+
+            /* Detect Tag again */
+            detectedTag = null;
+            currentDetections = aprilTag.getDetections();
+            for(AprilTagDetection detection : currentDetections) {
+                if (detection.metadata != null && detection.id == DESIRED_TAG_ID) { // found our tag
+                    detectedTag = detection;
+                    break;
+                }
+            }
+
+            if (detectedTag != null) driveUsingPID(detectedTag);
         }
+    }
+
+    private void driveUsingPID(AprilTagDetection targetTag) {
+        MecanumDrivetrain PIDDriveTrain = new MecanumDrivetrain(hardwareMap, telemetry);
+
+        PIDCoefficients DRIVE_X_YAW_PID = new PIDCoefficients(0.005, 0.0, 0.000005);
+        PIDController driveController = new PIDController(DrivetrainConstants.DRIVE_Y_PID, -MAX_SPEED, MAX_SPEED);
+        PIDController strafeController = new PIDController(DRIVE_X_YAW_PID, -MAX_SPEED, MAX_SPEED);
+        PIDController turnController = new PIDController(DrivetrainConstants.DRIVE_ROT_PID, -MAX_SPEED, MAX_SPEED);
+
+        double rangeError = targetTag.ftcPose.range - DESIRED_DISTANCE;
+        double headingError = -targetTag.ftcPose.bearing; // positive bearing = turn counter-clockwise = negative turn value
+        double yawError = targetTag.ftcPose.yaw;
+
+        if(Math.abs(rangeError) <= DISTANCE_ERR_TOLERANCE && Math.abs(headingError) <= HEADING_ERR_TOLERANCE && Math.abs(yawError) <= YAW_ERR_TOLERANCE) return;
+
+        double x = strafeController.control(yawError);
+        double y = driveController.control(rangeError);
+        double rot = turnController.control(headingError);
+
+        PIDDriveTrain.drive(x, y, rot);
     }
 
     private void setManualExposure(int msec, int gain) {
