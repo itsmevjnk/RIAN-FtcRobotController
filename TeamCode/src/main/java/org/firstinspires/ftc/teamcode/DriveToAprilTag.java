@@ -98,8 +98,21 @@ public class DriveToAprilTag extends LinearOpMode {
                 telemetry.addData("Dest. hdg", Math.toDegrees(destHeading));
             } else telemetry.addData(">", "Drive robot around to pick up a tag");
 
-            if(gamepad1.right_bumper && destCoord != null) {
-                Actions.runBlocking(drivetrain.actionBuilder(drivetrain.pose).splineTo(destCoord, destHeading).build());
+            if(gamepad1.right_bumper && detectedTag != null && detectedTag.ftcPose.range > Math.min(DESIRED_DISTANCE, RR_STOPPING_DISTANCE)) {
+                if(detectedTag.ftcPose.range > RR_STOPPING_DISTANCE) Actions.runBlocking(drivetrain.actionBuilder(drivetrain.pose).splineTo(destCoord, destHeading).build());
+
+                /* Detect Tag again */
+                if(detectedTag.ftcPose.range > DESIRED_DISTANCE) {
+                    detectedTag = null;
+                    currentDetections = aprilTag.getDetections();
+                    for(AprilTagDetection detection : currentDetections) {
+                        if (detection.metadata != null && detection.id == DESIRED_TAG_ID) { // found our tag
+                            detectedTag = detection;
+                            break;
+                        }
+                    }
+                    if (detectedTag != null) trackTag(detectedTag);
+                }
             }
 
             /* normal driving */
@@ -118,24 +131,11 @@ public class DriveToAprilTag extends LinearOpMode {
             telemetry.addData("Heading", Math.toDegrees(drivetrain.pose.heading.toDouble()));
 
             telemetry.update();
-
-            /* Detect Tag again */
-            detectedTag = null;
-            currentDetections = aprilTag.getDetections();
-            for(AprilTagDetection detection : currentDetections) {
-                if (detection.metadata != null && detection.id == DESIRED_TAG_ID) { // found our tag
-                    detectedTag = detection;
-                    break;
-                }
-            }
-
-            if (detectedTag != null) driveUsingPID(detectedTag);
         }
     }
 
-    private void driveUsingPID(AprilTagDetection targetTag) {
-        MecanumDrivetrain PIDDriveTrain = new MecanumDrivetrain(hardwareMap, telemetry);
-
+    private void trackTag(AprilTagDetection targetTag) {
+        /* PID controller */
         PIDCoefficients DRIVE_X_YAW_PID = new PIDCoefficients(0.005, 0.0, 0.000005);
         PIDController driveController = new PIDController(DrivetrainConstants.DRIVE_Y_PID, -MAX_SPEED, MAX_SPEED);
         PIDController strafeController = new PIDController(DRIVE_X_YAW_PID, -MAX_SPEED, MAX_SPEED);
@@ -151,7 +151,15 @@ public class DriveToAprilTag extends LinearOpMode {
         double y = driveController.control(rangeError);
         double rot = turnController.control(headingError);
 
-        PIDDriveTrain.drive(x, y, rot);
+        drivetrain.setDrivePowers(new PoseVelocity2d(
+                new Vector2d(
+                        y,
+                        x
+                ),
+                rot
+        ));
+
+        drivetrain.updatePoseEstimate();
     }
 
     private void setManualExposure(int msec, int gain) {

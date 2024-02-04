@@ -17,11 +17,15 @@ public class DriveTeleOp extends LinearOpMode {
     private Launcher launcher;
     private Slide slide;
 
+    private boolean lastState;
+    private boolean currentSlideState;
+
     @Override
     public void runOpMode() {
         drivetrain = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
         launcher = new Launcher(hardwareMap);
         slide = new Slide(hardwareMap);
+        lastState = currentSlideState = false; //retracted
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -42,8 +46,11 @@ public class DriveTeleOp extends LinearOpMode {
             telemetry.addData("y", drivetrain.pose.position.y);
             telemetry.addData("Heading", Math.toDegrees(drivetrain.pose.heading.toDouble()));
 
+            if (gamepad1.cross && !lastState) currentSlideState = !currentSlideState;
+            lastState = gamepad1.cross;
+
             launcher.setState(gamepad1.options);
-            slide.setState(gamepad1.cross);
+            slide.setState(currentSlideState);
             telemetry.update();
         }
     }
