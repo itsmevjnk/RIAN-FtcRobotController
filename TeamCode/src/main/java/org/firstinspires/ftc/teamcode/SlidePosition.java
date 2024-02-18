@@ -26,8 +26,8 @@ public class SlidePosition extends LinearOpMode {
         waitForStart();
 
         while(opModeIsActive()) {
-            slideLeft.setPower(-gamepad1.left_stick_y/4);
-            slideRight.setPower(-gamepad1.right_stick_y/4);
+            slideLeft.setPower(-gamepad1.left_stick_y/5);
+            slideRight.setPower(-gamepad1.right_stick_y/5);
             telemetry.addData("Left slide pos.", slideLeft.getCurrentPosition());
             telemetry.addData("Right slide pos.", slideRight.getCurrentPosition());
             telemetry.update();

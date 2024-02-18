@@ -8,9 +8,9 @@ import org.firstinspires.ftc.teamcode.RobotConfig;
 public class Slide {
     private DcMotor motorLeft;
     private DcMotor motorRight;
-    private final int LEFT_POSITION = -6000;
-    private final int RIGHT_POSITION = 0;
-    private final double SPEED = 0.75;
+    private final int LEFT_POSITION = 5095;
+    private final int RIGHT_POSITION = -5100;
+    private final double SPEED = 0.25;
     public Slide (HardwareMap hardwareMap) {
         motorLeft = hardwareMap.get(DcMotor.class, RobotConfig.DC_SLIDE_LEFT);
         motorRight = hardwareMap.get(DcMotor.class, RobotConfig.DC_SLIDE_RIGHT);
