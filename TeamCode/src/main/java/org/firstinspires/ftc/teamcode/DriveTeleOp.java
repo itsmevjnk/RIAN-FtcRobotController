@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.Mechanisms.Launcher;
+import org.firstinspires.ftc.teamcode.Mechanisms.Outtake;
 import org.firstinspires.ftc.teamcode.Mechanisms.Slide;
 
 @TeleOp(name = "Driving TeleOp")
@@ -20,10 +21,11 @@ public class DriveTeleOp extends LinearOpMode {
     private Launcher launcher;
     private Slide slide;
     private Intake intake;
+    private Outtake outtake;
     private DistanceSensor sensorDistance;
     private final double STOPPING_DISTANCE = 2; //inch
-    private boolean lastState;
-    private boolean currentSlideState;
+    private int SlideState;
+    private boolean outtakeState;
 
     @Override
     public void runOpMode() {
@@ -31,8 +33,10 @@ public class DriveTeleOp extends LinearOpMode {
         launcher = new Launcher(hardwareMap);
         slide = new Slide(hardwareMap);
         intake = new Intake(hardwareMap);
+        outtake = new Outtake(hardwareMap);
         sensorDistance = hardwareMap.get(DistanceSensor.class,"sensorDistance");
-        lastState = currentSlideState = false; //retracted
+        SlideState = 0;
+        outtakeState = false;
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -57,13 +61,20 @@ public class DriveTeleOp extends LinearOpMode {
             telemetry.addData("y", drivetrain.pose.position.y);
             telemetry.addData("Heading", Math.toDegrees(drivetrain.pose.heading.toDouble()));
 
-            if (gamepad1.cross && !lastState) currentSlideState = !currentSlideState;
-            lastState = gamepad1.cross;
-            if (gamepad1.right_bumper) intake.setMotor(2);
-            else if (gamepad1.left_bumper) intake.setMotor(1);
+            if (gamepad2.square) SlideState = 1; //extend 50%
+            else if (gamepad2.circle) SlideState = 2; //extend 100%
+            else if (gamepad2.cross) SlideState = 0; //retracted
+            slide.setState(SlideState);
+
+            if (gamepad2.right_bumper) intake.setMotor(2);
+            else if (gamepad2.left_bumper) intake.setMotor(1);
             else intake.setMotor(0);
-            launcher.setState(gamepad1.options);
-            slide.setState(currentSlideState);
+
+            if (gamepad2.dpad_up) outtakeState = true; //dropping pixels
+            if (gamepad2.dpad_down) outtakeState = false; //getting pixels
+            outtake.setState(outtakeState);
+
+            launcher.setState(gamepad2.touchpad);
             telemetry.update();
         }
     }

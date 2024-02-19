@@ -100,7 +100,7 @@ public class DriveToAprilTag extends LinearOpMode {
                 telemetry.addData("Dest. Y", destCoord.y);
                 telemetry.addData("Dest. hdg", Math.toDegrees(destHeading));
             } else telemetry.addData(">", "Drive robot around to pick up a tag");
-            if(gamepad1.right_bumper && detectedTag != null && detectedTag.ftcPose.range > Math.min(DESIRED_DISTANCE, RR_STOPPING_DISTANCE)) {
+            if(detectedTag != null && detectedTag.ftcPose.range > Math.min(DESIRED_DISTANCE, RR_STOPPING_DISTANCE)) {
                 if(detectedTag.ftcPose.range > RR_STOPPING_DISTANCE) Actions.runBlocking(drivetrain.actionBuilder(drivetrain.pose).splineTo(destCoord, destHeading).build());
 
                 /* Detect Tag again */
@@ -129,7 +129,7 @@ public class DriveToAprilTag extends LinearOpMode {
 
             drivetrain.updatePoseEstimate();
 
-            slide.setState(true);
+            slide.setState(1);
 
             telemetry.addData("x", drivetrain.pose.position.x);
             telemetry.addData("y", drivetrain.pose.position.y);
