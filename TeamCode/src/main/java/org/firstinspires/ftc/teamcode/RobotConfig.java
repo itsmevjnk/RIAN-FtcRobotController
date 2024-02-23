@@ -20,9 +20,11 @@ public class RobotConfig {
 
     /* servo names */
     public static final String SERVO_LAUNCHER = "servoLauncher";
+    public static final String SERVO_OUTTAKE = "servoOuttake";
     /* motor names */
     public static final String DC_INTAKE = "DCIntake";
 
+    /* slide motor names */
     public static final String DC_SLIDE_LEFT = "slideLeft";
     public static final String DC_SLIDE_RIGHT = "slideRight";
 }
